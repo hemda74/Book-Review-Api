@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
 using BookReviewApp.Dto;
 using BookReviewApp.Interfaces;
 using BookReviewApp.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BookReviewApp.Controllers
 {
@@ -14,7 +14,7 @@ namespace BookReviewApp.Controllers
         private readonly ICountryRepository _countryRepository;
         private readonly IMapper _mapper;
 
-        public AuhtorController(IAuthorRepository ownerRepository, 
+        public AuhtorController(IAuthorRepository ownerRepository,
             ICountryRepository countryRepository,
             IMapper mapper)
         {
@@ -40,9 +40,11 @@ namespace BookReviewApp.Controllers
         [ProducesResponseType(400)]
         public IActionResult GetOwner(int authorId)
         {
+            // Aly -> This method is totally wrong, you are querying database twice, while it's needed
             if (!_authorRepository.AuthorExists(authorId))
                 return NotFound();
 
+            // Aly -> This is not right, mapping parameters are incorrect
             var author = _mapper.Map<AuthorDto>(_authorRepository.AuthorExists(authorId));
 
             if (!ModelState.IsValid)
@@ -56,11 +58,13 @@ namespace BookReviewApp.Controllers
         [ProducesResponseType(400)]
         public IActionResult GetBookByAuthor(int authorId)
         {
+            // Aly -> This method is totally wrong, you are querying database twice, while it's needed
             if (!_authorRepository.AuthorExists(authorId))
             {
                 return NotFound();
             }
 
+            // Aly -> This is not right, naming conventions are wrong, mapping parameters are incorrect
             var author = _mapper.Map<List<BookDto>>(
                 _authorRepository.AuthorExists(authorId));
 
@@ -78,9 +82,12 @@ namespace BookReviewApp.Controllers
             if (authorCreate == null)
                 return BadRequest(ModelState);
 
+            // Aly -> Should be named author, not authors, it's single result
             var authors = _authorRepository.GetAuthor()
+                // Aly -> Should be moved down, by creating another method in repository, or create service layer
                 .Where(c => c.LastName.Trim().ToUpper() == authorCreate.LastName.TrimEnd().ToUpper())
                 .FirstOrDefault();
+            // Aly -> Up here, you are querying database twice, which is a very bad practice, let's discuss
 
             if (authors != null)
             {
@@ -93,6 +100,7 @@ namespace BookReviewApp.Controllers
 
             var ownerMap = _mapper.Map<Author>(authorCreate);
 
+            // Aly -> If virtual approach was used here, we would be able to save one call to database, which increases performance
             ownerMap.Country = _countryRepository.GetCountry(countryId);
 
             if (!_authorRepository.CreateAuthor(ownerMap))
@@ -108,7 +116,10 @@ namespace BookReviewApp.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
-        public IActionResult UpdateAuthor(int authorId, [FromBody] AuthorDto updatedAuthor)
+        public IActionResult UpdateAuthor(
+            // Aly -> Better to specify it's coming from route
+            int authorId,
+            [FromBody] AuthorDto updatedAuthor)
         {
             if (updatedAuthor == null)
                 return BadRequest(ModelState);

@@ -8,7 +8,7 @@ namespace BookReviewApp.Repository
     {
         private readonly DataContext _context;
 
-        public AuthorRepository (DataContext context)
+        public AuthorRepository(DataContext context)
         {
             _context = context;
         }
@@ -25,7 +25,7 @@ namespace BookReviewApp.Repository
             return Save();
         }
 
-        public Author GetAuthor (int authorId)
+        public Author GetAuthor(int authorId)
         {
             return _context.Authors.Where(o => o.Id == authorId).FirstOrDefault();
         }
@@ -62,6 +62,7 @@ namespace BookReviewApp.Repository
             return Save();
         }
 
+        // Aly -> Should be named GetAuthor(s) because it returns list
         public ICollection<Author> GetAuthor()
         {
             return _context.Authors.ToList();
