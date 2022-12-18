@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Aly Rageh\\source\\repos\\Hemdan-Book-Review-Api\\BookReviewApp.csproj": {}
+    "C:\\Users\\DELL\\Documents\\GitHub\\Book-Review-Api\\BookReviewApp.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Aly Rageh\\source\\repos\\Hemdan-Book-Review-Api\\BookReviewApp.csproj": {
+    "C:\\Users\\DELL\\Documents\\GitHub\\Book-Review-Api\\BookReviewApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Aly Rageh\\source\\repos\\Hemdan-Book-Review-Api\\BookReviewApp.csproj",
+        "projectUniqueName": "C:\\Users\\DELL\\Documents\\GitHub\\Book-Review-Api\\BookReviewApp.csproj",
         "projectName": "BookReviewApp",
-        "projectPath": "C:\\Users\\Aly Rageh\\source\\repos\\Hemdan-Book-Review-Api\\BookReviewApp.csproj",
-        "packagesPath": "C:\\Users\\Aly Rageh\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Aly Rageh\\source\\repos\\Hemdan-Book-Review-Api\\obj\\",
+        "projectPath": "C:\\Users\\DELL\\Documents\\GitHub\\Book-Review-Api\\BookReviewApp.csproj",
+        "packagesPath": "C:\\Users\\DELL\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\DELL\\Documents\\GitHub\\Book-Review-Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Aly Rageh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\DELL\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],

@@ -38,14 +38,15 @@ namespace BookReviewApp.Controllers
         [HttpGet("{authorId}")]
         [ProducesResponseType(200, Type = typeof(Author))]
         [ProducesResponseType(400)]
-        public IActionResult GetOwner(int authorId)
+        public IActionResult GetAuthor(int authorId)
         {
             // Aly -> This method is totally wrong, you are querying database twice, while it's needed
             if (!_authorRepository.AuthorExists(authorId))
                 return NotFound();
 
             // Aly -> This is not right, mapping parameters are incorrect
-            var author = _mapper.Map<AuthorDto>(_authorRepository.AuthorExists(authorId));
+            // Ahmed -> Handeled change AuthorExsists to Get Author
+            var author = _mapper.Map<AuthorDto>(_authorRepository.GetAuthor(authorId));
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -83,13 +84,14 @@ namespace BookReviewApp.Controllers
                 return BadRequest(ModelState);
 
             // Aly -> Should be named author, not authors, it's single result
-            var authors = _authorRepository.GetAuthor()
+            // Ahmed -> Handeld change Authors to Author
+            var author = _authorRepository.GetAuthor()
                 // Aly -> Should be moved down, by creating another method in repository, or create service layer
                 .Where(c => c.LastName.Trim().ToUpper() == authorCreate.LastName.TrimEnd().ToUpper())
                 .FirstOrDefault();
             // Aly -> Up here, you are querying database twice, which is a very bad practice, let's discuss
 
-            if (authors != null)
+            if (author != null)
             {
                 ModelState.AddModelError("", "Author already exists");
                 return StatusCode(422, ModelState);
