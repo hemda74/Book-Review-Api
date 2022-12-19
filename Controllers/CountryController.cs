@@ -53,7 +53,7 @@ namespace BookReviewApp.Controllers
         public IActionResult GetCountryOfAnAuthor(int authorId)
         {
             var country = _mapper.Map<CountryDto>(
-                _countryRepository.GetCountryByAuthor(authorId));
+                _countryRepository.GetCountryIdByAuthor(authorId));
 
             if (!ModelState.IsValid)
                 return BadRequest();

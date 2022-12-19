@@ -17,7 +17,7 @@ namespace BookReviewApp.Repository
         }
         public bool CountryExists(int id)
         {
-            return _context.Countries.Any(c => c.Id == id);
+            return _context.Countries.Any(c => c.CountryId == id);
         }
 
         public bool CreateCountry(Country country)
@@ -32,9 +32,9 @@ namespace BookReviewApp.Repository
             return Save();
         }
 
-        public ICollection<Author> GetAuthorsFromACountry(int countryId)
+        public ICollection<Author> GetAuthorsFromACountry(int countryId2)
         {
-            return _context.Authors.Where(c => c.Country.Id == countryId).ToList();
+            return _context.Authors.Where(c => c.CountryId == countryId2).ToList();
         }
 
         public ICollection<Country> GetCountries()
@@ -44,12 +44,12 @@ namespace BookReviewApp.Repository
 
         public Country GetCountry(int id)
         {
-            return _context.Countries.Where(c => c.Id == id).FirstOrDefault();
+            return _context.Countries.Where(c => c.CountryId == id).FirstOrDefault();
         }
 
-        public Country GetCountryByAuthor(int authorId)
+        public int  GetCountryIdByAuthor(int cId)
         {
-            return _context.Authors.Where(o => o.Id == authorId).Select(c => c.Country).FirstOrDefault();
+            return _context.Authors.Where(o => o.Id == cId).Select(c => c.CountryId).FirstOrDefault();
         }
 
         public bool Save()

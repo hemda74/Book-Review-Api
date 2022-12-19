@@ -4,7 +4,8 @@ namespace BookReviewApp.Interfaces
 {
     public interface IAuthorRepository
     {
-        ICollection<Author> GetAuthor();
+        // Ahmed Change Get Author -> Get Authors
+        ICollection<Author> GetAuthors();
         Author GetAuthor (int authorId);
         ICollection<Author> GetAuthorOfBook(int bookId);
         ICollection<Book> GetBookByAuthor(int athourId);

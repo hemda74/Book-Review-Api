@@ -27,7 +27,7 @@ namespace BookReviewApp.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<Author>))]
         public IActionResult GetAuthors()
         {
-            var authors = _mapper.Map<List<AuthorDto>>(_authorRepository.GetAuthor());
+            var authors = _mapper.Map<List<AuthorDto>>(_authorRepository.GetAuthors());
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -66,8 +66,9 @@ namespace BookReviewApp.Controllers
             }
 
             // Aly -> This is not right, naming conventions are wrong, mapping parameters are incorrect
+            // Ahmed -> Handled Change AuthorExists To getbookby author
             var author = _mapper.Map<List<BookDto>>(
-                _authorRepository.AuthorExists(authorId));
+                _authorRepository.GetBookByAuthor(authorId));
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -85,7 +86,7 @@ namespace BookReviewApp.Controllers
 
             // Aly -> Should be named author, not authors, it's single result
             // Ahmed -> Handeld change Authors to Author
-            var author = _authorRepository.GetAuthor()
+            var author = _authorRepository.GetAuthors()
                 // Aly -> Should be moved down, by creating another method in repository, or create service layer
                 .Where(c => c.LastName.Trim().ToUpper() == authorCreate.LastName.TrimEnd().ToUpper())
                 .FirstOrDefault();
@@ -103,7 +104,8 @@ namespace BookReviewApp.Controllers
             var ownerMap = _mapper.Map<Author>(authorCreate);
 
             // Aly -> If virtual approach was used here, we would be able to save one call to database, which increases performance
-            ownerMap.Country = _countryRepository.GetCountry(countryId);
+             //Ahmed -> this line deosnot mean anything after virtual approach used  
+            //ownerMap.CountryId = _countryRepository.GetCountry(countryId);
 
             if (!_authorRepository.CreateAuthor(ownerMap))
             {

@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-builder.Services.AddTransient<Seed>();
+//builder.Services.AddTransient<Seed>();
 builder.Services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -30,19 +30,19 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 var app = builder.Build();
 
-if (args.Length == 1 && args[0].ToLower() == "seeddata")
-    SeedData(app);
+//if (args.Length == 1 && args[0].ToLower() == "seeddata")
+//    SeedData(app);
 
-void SeedData(IHost app)
-{
-    var scopedFactory = app.Services.GetService<IServiceScopeFactory>();
+//void SeedData(IHost app)
+//{
+//    var scopedFactory = app.Services.GetService<IServiceScopeFactory>();
 
-    using (var scope = scopedFactory.CreateScope())
-    {
-        var service = scope.ServiceProvider.GetService<Seed>();
-        service.SeedDataContext();
-    }
-}
+//    using (var scope = scopedFactory.CreateScope())
+//    {
+//        var service = scope.ServiceProvider.GetService<Seed>();
+//        service.SeedDataContext();
+//    }
+//}
 
 
 

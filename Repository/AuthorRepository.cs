@@ -63,7 +63,8 @@ namespace BookReviewApp.Repository
         }
 
         // Aly -> Should be named GetAuthor(s) because it returns list
-        public ICollection<Author> GetAuthor()
+        // Ahmed Handled Change GetAuthor Method to GetAuthors Method in both Author Interface And Author Repo
+        public ICollection<Author> GetAuthors()
         {
             return _context.Authors.ToList();
         }
