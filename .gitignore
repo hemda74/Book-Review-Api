@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/.vs/BookReviewApp/v17/.suo
+/bin/Debug/net6.0/BookReviewApp.dll
+/bin/Debug/net6.0/BookReviewApp.pdb
