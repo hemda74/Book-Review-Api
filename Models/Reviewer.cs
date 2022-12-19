@@ -1,10 +1,10 @@
 ﻿namespace BookReviewApp.Models
 {
-    public class Reviewer
-    {
-        public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public ICollection<Review> Reviews { get; set; }
-    }
+	public class Reviewer
+	{
+		public int ReviewerId { get; set; }
+		public string FirstName { get; set; } = string.Empty;
+		public string LastName { get; set; } = string.Empty;
+		public virtual ICollection<Review>? Reviews { get; set; }
+	}
 }

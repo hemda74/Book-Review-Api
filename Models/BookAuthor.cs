@@ -1,10 +1,11 @@
-﻿namespace BookReviewApp.Models
-{
-    public class BookAuthor
-    {
-        public int BookId { get; set; }
-        public int AuthorId { get; set; }
-        public Book Book { get; set; }
-        public Author Author { get; set; }
-    }
-}
+﻿//namespace BookReviewApp.Models
+//{
+// Aly -> This is not right, one book may not have more than one author
+//    public class BookAuthor
+//    {
+//        public int BookId { get; set; }
+//        public int AuthorId { get; set; }
+//        public virtual Book Book { get; set; } = new();
+//        public virtual Author Author { get; set; } = new();
+//    }
+//}
