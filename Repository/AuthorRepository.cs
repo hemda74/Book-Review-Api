@@ -1,6 +1,9 @@
 ﻿using BookReviewApp.Data;
 using BookReviewApp.Interfaces;
 using BookReviewApp.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using System;
 
 namespace BookReviewApp.Repository
 {
@@ -12,61 +15,80 @@ namespace BookReviewApp.Repository
         {
             _context = context;
         }
-
-        public bool CreateAuthor(Author author)
+        // re implementation of authorexists  
+        public async Task<IEnumerable<Author>> AuthorExists(int authorId)
         {
-            _context.Add(author);
-            return Save();
+          
+            IQueryable<Author> query = _context.Authors;
+
+            if (authorId != null)
+            {
+                query = query.Where(e => e.AuthorId == authorId);
+            }
+
+            return await query.ToListAsync();
+            
         }
 
-        public bool DeleteAuthor(Author author)
+        public async Task<Author> GetAuthorById(int authorId)
         {
-            _context.Remove(author);
-            return Save();
+            return await _context.Authors
+                .FirstOrDefaultAsync(e => e.AuthorId == authorId);
         }
 
-        public Author GetAuthor(int authorId)
+        public ICollection<Author> GetAuthorOfABook(int bookId)
         {
-            return _context.Authors.Where(o => o.Id == authorId).FirstOrDefault();
+            return _context.Books.Where(p => p.BookId == bookId).Select(o => o.Author).ToList();
+        }
+        public async Task<IEnumerable<Author>> GetAuthors()
+        {
+            return await _context.Authors.ToListAsync();
+        }
+        public async Task<Author> CreateAuthor(Author author)
+        {
+            var result = await _context.Authors.AddAsync(author);
+            await _context.SaveChangesAsync();
+            return result.Entity;
         }
 
-        public ICollection<Author> GetAuthorOfBook(int bookId)
+        public async Task<Author> DeleteAuthor(int authorId)
         {
-            return _context.BookAuthors.Where(p => p.Book.Id == bookId).Select(o => o.Author).ToList();
+            {
+                var result = await _context.Authors
+                    .FirstOrDefaultAsync(e => e.AuthorId == authorId);
+                if (result != null)
+                {
+                    _context.Authors.Remove(result);
+                    await _context.SaveChangesAsync();
+                }
+                return result;
+            }
         }
 
-        public ICollection<Author> GetAuthros()
-        {
-            return _context.Authors.ToList();
-        }
+        ICollection<Book> IAuthorRepository.GetBookByAuthor(int authorId) => _context.Authors.Where(p => p.AuthorId == authorId).Select(p => p.Book).ToList();
 
-        public ICollection<Book> GetBookByAuthor(int ownerId)
+        public async Task<Author> UpdateAuthor(Author author)
         {
-            return _context.BookAuthors.Where(p => p.Author.Id == ownerId).Select(p => p.Book).ToList();
-        }
+            var result = await _context.Authors
+          .FirstOrDefaultAsync(e => e.AuthorId == author.AuthorId);
 
-        public bool AuthorExists(int authorId)
-        {
-            return _context.Authors.Any(o => o.Id == authorId);
-        }
+            if (result != null)
+            {
+                result.AuthorId = author.AuthorId;
+                result.FirstName = author.FirstName;
+                result.LastName = author.LastName;
+                result.Gym = author.Gym;
+                result.Country = author.Country;
+                result.CountryId = author.CountryId;
+                result.Book = author.Book;
+                result.Book = author.Book;
 
-        public bool Save()
-        {
-            var saved = _context.SaveChanges();
-            return saved > 0 ? true : false;
-        }
+                await _context.SaveChangesAsync();
 
-        public bool UpdateAuthor(Author author)
-        {
-            _context.Update(author);
-            return Save();
-        }
+                return result;
+            }
 
-        // Aly -> Should be named GetAuthor(s) because it returns list
-        // Ahmed Handled Change GetAuthor Method to GetAuthors Method in both Author Interface And Author Repo
-        public ICollection<Author> GetAuthors()
-        {
-            return _context.Authors.ToList();
+            return null;
         }
     }
 }

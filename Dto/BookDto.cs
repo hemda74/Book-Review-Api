@@ -2,8 +2,9 @@
 {
     public class BookDto
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public DateTime ReleaseDate { get; set; }
+        public int BookId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int AuthorId { get; set; }
+        public DateTime ReleaseDateUTC { get; set; }
     }
 }

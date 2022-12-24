@@ -5,15 +5,16 @@ namespace BookReviewApp.Interfaces
 {
     public interface IBookRepository
     {
-        ICollection<Book> GetBooks();
-        Book GetBook(int id);
-        Book GetBook(string name);
-        Book GetBookTrimToUpper(BookDto BookCreate);
-        decimal GetBookRating(int bookId);
-        bool BookExists(int bookId);
-        bool CreateBook (int authorId, int categoryId, Book book);
-        bool UpdateBook(int authorId, int categoryId, Book book);
-        bool DeleteBook(Book book);
-        bool Save();
+        //----Ahmed-> change to add async programming 
+        Task<IEnumerable<Book>> GetBooks();
+        Task<Book> GetBookById(int id);
+        Task<Book> GetBookByName(string name);
+       
+        Task<decimal> GetBookRating(int bookId);
+        Task<IEnumerable<Book>> BookExists(int bookId);
+        Task<Book> CreateBook(Book book);
+        Task<Book> UpdateBook( Book book);
+        Task<Book> DeleteBook(int bookId);
+        
     }
 }

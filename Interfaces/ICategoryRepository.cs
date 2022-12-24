@@ -4,13 +4,12 @@ namespace BookReviewApp.Interfaces
 {
     public interface ICategoryRepository
     {
-        ICollection<Category> GetCategories();
-        Category GetCategory(int id);
-        ICollection<Book> GetBookByCategory(int categoryId);
-        bool CategoryExists(int id);
-        bool CreateCategory(Category category);
-        bool UpdateCategory(Category category);
-        bool DeleteCategory(Category category);
-        bool Save();
+        Task<IEnumerable<Category>> GetCategories();
+        Task<Category> GetCategory(int id);
+        ICollection<Book> GetBooksOfCategory(int categoryId);
+        Task<IEnumerable<Category>> CategoryExists(int id);
+        Task<Category> CreateCategory(Category category);
+        Task<Category> UpdateCategory(Category category);
+        Task<Category> DeleteCategory(int categoryid);
     }
 }

@@ -1,162 +1,187 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using BookReviewApp.Dto;
-using BookReviewApp.Interfaces;
+﻿using BookReviewApp.Interfaces;
 using BookReviewApp.Models;
-
+using Microsoft.AspNetCore.Mvc;
 namespace BookReviewApp.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class BookController : Controller
+    // book conttroler
+    // you will find old bookcontroller in anthor controller commented
+    // 1- add asyncrouns programming 
+    // 2- try to fix query db twice
+    // plaese look at  --> changes in BookExists and GetBookRating method 
+    // i can't find any value of DTO so i stoped working with it  
+    namespace BookReviewApp.Controllers
     {
-        private readonly IBookRepository _bookRepository;
-        private readonly IReviewRepository _reviewRepository;
-        private readonly IMapper _mapper;
-
-        public BookController(IBookRepository bookRepository,
-            IReviewRepository reviewRepository,
-            IMapper mapper)
+        [Route("api/[controller]")]
+        [ApiController]
+        public class BookController : ControllerBase
         {
-            _bookRepository = bookRepository;
-            _reviewRepository = reviewRepository;
-            _mapper = mapper;
-        }
+            private readonly IBookRepository bookRepository;
+            private readonly IReviewRepository reviewRepository;
 
-        [HttpGet]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Book>))]
-        public IActionResult GetBooks()
-        {
-            var books = _mapper.Map<List<BookDto>>(_bookRepository.GetBooks());
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(books);
-        }
-
-        [HttpGet("{bookId}")]
-        [ProducesResponseType(200, Type = typeof(Book))]
-        [ProducesResponseType(400)]
-        public IActionResult GetBook(int bookId)
-        {
-            if (!_bookRepository.BookExists(bookId))
-                return NotFound();
-
-            var book = _mapper.Map<BookDto>(_bookRepository.GetBook(bookId));
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(book);
-        }
-
-        [HttpGet("{bookId}/rating")]
-        [ProducesResponseType(200, Type = typeof(decimal))]
-        [ProducesResponseType(400)]
-        public IActionResult GetBookRating(int bookId)
-        {
-            if (!_bookRepository.BookExists(bookId))
-                return NotFound();
-
-            var rating = _bookRepository.GetBookRating(bookId);
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            return Ok(rating);
-        }
-
-        [HttpPost]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public IActionResult CreateBook([FromQuery] int authorId, [FromQuery] int catId, [FromBody] BookDto bookCreate)
-        {
-            if (bookCreate == null)
-                return BadRequest(ModelState);
-
-            var books = _bookRepository.GetBookTrimToUpper(bookCreate);
-
-            if (books != null)
+            public BookController(IBookRepository bookRepository)
             {
-                ModelState.AddModelError("", "Author already exists");
-                return StatusCode(422, ModelState);
+                this.bookRepository = bookRepository;
             }
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var bookMap = _mapper.Map<Book>(bookCreate);
-
-      
-            if (!_bookRepository.CreateBook(authorId, catId, bookMap))
+            // handel get all Books 
+            [HttpGet]
+            public async Task<ActionResult> GetBooks()
             {
-                ModelState.AddModelError("", "Something went wrong while saving");
-                return StatusCode(500, ModelState);
+                try
+                {
+                    return Ok(await bookRepository.GetBooks());
+                }
+                catch (Exception)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error retrieving data from the database");
+                }
+
             }
-
-            return Ok("Successfully created");
-        }
-
-        [HttpPut("{bookId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult UpdateBook(int bookId, 
-            [FromQuery] int authorId, [FromQuery] int catId,
-            [FromBody] BookDto updatedBook)
-        {
-            if (updatedBook == null)
-                return BadRequest(ModelState);
-
-            if (bookId != updatedBook.Id)
-                return BadRequest(ModelState);
-
-            if (!_bookRepository.BookExists(bookId))
-                return NotFound();
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            var bookMap = _mapper.Map<Book>(updatedBook);
-
-            if (!_bookRepository.UpdateBook(authorId, catId,bookMap))
+            // handel get book by id method 
+            [HttpGet("{bookid:int}")]
+            public async Task<ActionResult<Book>> GetBookById(int id)
             {
-                ModelState.AddModelError("", "Something went wrong updating author");
-                return StatusCode(500, ModelState);
+                try
+                {
+                    var result = await bookRepository.GetBookById(id);
+
+                    if (result == null) return NotFound();
+
+                    return result;
+                }
+                catch (Exception)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error retrieving data from the database");
+                }
             }
-
-            return NoContent();
-        }
-
-        [HttpDelete("{bookId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult DeleteBook(int bookId)
-        {
-            if (!_bookRepository.BookExists(bookId))
+            // handel get book by Name method 
+            [HttpGet("{bookname:string}")]
+            public async Task<ActionResult<Book>> GetAuthorByName(string name)
             {
-                return NotFound();
+                try
+                {
+                    var result = await bookRepository.GetBookByName(name);
+
+                    if (result == null) return NotFound();
+
+                    return result;
+                }
+                catch (Exception)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error retrieving data from the database");
+                }
             }
-
-            var reviewsToDelete = _reviewRepository.GetReviewsOfABook(bookId);
-            var bookToDelete = _bookRepository.GetBook(bookId);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (!_reviewRepository.DeleteReviews(reviewsToDelete.ToList()))
+            // Ahmed  is that method right or how should i code it ?
+            [HttpGet("{bookid:int}")]
+            public async Task<ActionResult<Book>> BookExists(int id)
             {
-                ModelState.AddModelError("", "Something went wrong when deleting reviews");
-            }
+                try
+                {
+                    var result = await bookRepository.BookExists(id);
 
-            if (!_bookRepository.DeleteBook(bookToDelete))
+                    if (result == null) return NotFound();
+
+                    return Ok(result);
+                }
+                catch (Exception)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error retrieving data from the database");
+                }
+            }
+            // Ahmed --> please look at this method check wether it correct or not and if not please build it correctly
+            [HttpGet("{bookid:int}/rating")]
+            public async Task<ActionResult<decimal>> GetBookRating(int bookId)
             {
-                ModelState.AddModelError("", "Something went wrong deleting author");
-            }
+                var res = await bookRepository.BookExists(bookId);
+                if (res == null)
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    var book= bookRepository.GetBookRating(bookId);
+                    if(!ModelState.IsValid)
+                        return BadRequest(ModelState);
 
-            return NoContent();
+                     return Ok(book);
+                    
+                }  
+            }
+            // please look at this method too
+            [HttpPost("createbook")]
+            public async Task<ActionResult<Book>> CreateBook([FromBody] Book book)
+            {
+                try
+                {
+
+                    if (book == null)
+                        return BadRequest();
+                    // Add custom model validation error method
+                    var authid = bookRepository.BookExists(book.BookId);
+                    if (authid != null)
+                    {
+                        ModelState.AddModelError("BookId", "Book Id already in use ");
+                        return BadRequest(ModelState);
+                    }
+                    var createdBook = await bookRepository.CreateBook(book);
+
+                    return CreatedAtAction(nameof(GetBookById),
+                        new { id = createdBook.BookId }, createdBook);
+                }
+                catch (Exception)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error creating new book record");
+                }
+            }
+            // handle update method
+            [HttpPut("{bookid:int}/updatebook")]
+            public async Task<ActionResult<Book>> UpdateAuthor(int id, Book book)
+            {
+                try
+                {
+                    // check for id first
+                    if (id != book.BookId)
+                        return BadRequest("Book ID mismatch");
+
+                    var bookUpdate = await bookRepository.GetBookById(id);
+
+                    if (bookUpdate == null)
+                        return NotFound($"Book with Id = {id} not found");
+
+                    return await bookRepository.UpdateBook(book);
+                }
+                catch (Exception)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error updating data");
+                }
+            }
+            // handel delete method
+            [HttpDelete("{bookid:int}/delete")]
+            public async Task<ActionResult<Book>> DeleteBook(int id)
+            {
+                try
+                {
+                    var bookToDelete = await bookRepository.BookExists(id);
+
+                    if (bookToDelete == null)
+                    {
+                        return NotFound($"Book with Id = {id} not found");
+                    }
+
+                    return await bookRepository.DeleteBook(id);
+                }
+                catch (Exception)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error deleting data");
+                }
+            }
         }
     }
 }
+

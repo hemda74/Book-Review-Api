@@ -1,175 +1,175 @@
-﻿using AutoMapper;
-using BookReviewApp.Dto;
-using BookReviewApp.Interfaces;
+﻿using BookReviewApp.Interfaces;
 using BookReviewApp.Models;
 using Microsoft.AspNetCore.Mvc;
-
 namespace BookReviewApp.Controllers
 {
+    // author conttroler
+    // 1- add asyncrouns programming 
+    // 2- try to fix query db twice
+    // plaese look at  --> changes in author exists method 
+    // i can't find any value of DTO so i stoped working with it  
+    // you will find old author controller commented if it need to be reviewed  
     [Route("api/[controller]")]
     [ApiController]
-    public class AuhtorController : Controller
+    public class AuthorController : ControllerBase
     {
-        private readonly IAuthorRepository _authorRepository;
-        private readonly ICountryRepository _countryRepository;
-        private readonly IMapper _mapper;
+        private const string craeteapi = "createauthor";
+        private readonly IAuthorRepository authorRepository;
+        private readonly ICountryRepository countryRepository;
+     
 
-        public AuhtorController(IAuthorRepository ownerRepository,
-            ICountryRepository countryRepository,
-            IMapper mapper)
+        public AuthorController(IAuthorRepository authorRepository)
         {
-            _authorRepository = ownerRepository;
-            _countryRepository = countryRepository;
-            _mapper = mapper;
+            this.authorRepository = authorRepository;
         }
-
+        // handel get all authors 
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Author>))]
-        public IActionResult GetAuthors()
+        public async Task<ActionResult> GetAuthors()
         {
-            var authors = _mapper.Map<List<AuthorDto>>(_authorRepository.GetAuthors());
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(authors);
+            try
+            {
+                return Ok(await authorRepository.GetAuthors());
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
         }
-
-        [HttpGet("{authorId}")]
-        [ProducesResponseType(200, Type = typeof(Author))]
-        [ProducesResponseType(400)]
-        public IActionResult GetAuthor(int authorId)
+        // handel get author by id method 
+        [HttpGet("{authorid:int}")]
+        public async Task<ActionResult<Author>> GetAuthorById(int id)
         {
-            // Aly -> This method is totally wrong, you are querying database twice, while it's needed
-            if (!_authorRepository.AuthorExists(authorId))
-                return NotFound();
+            try
+            {
+                var result = await authorRepository.GetAuthorById(id);
 
-            // Aly -> This is not right, mapping parameters are incorrect
-            // Ahmed -> Handeled change AuthorExsists to Get Author
-            var author = _mapper.Map<AuthorDto>(_authorRepository.GetAuthor(authorId));
+                if (result == null) return NotFound();
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(author);
+                return result;
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
         }
+        /////////////////////////////////////////////////
+        // Ahmed  is that method right or how should i code it ?
+        [HttpGet("{authorid:int}")]
+        public async Task<ActionResult<Author>> AuthorExists(int id)
+        {
+            try
+            {
+                var result = await authorRepository.AuthorExists(id);
 
-        [HttpGet("{authorId}/book")]
-        [ProducesResponseType(200, Type = typeof(Author))]
-        [ProducesResponseType(400)]
+                if (result == null) return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+        // get book by author method
+        [HttpGet("{authorid:int}/book")]
         public IActionResult GetBookByAuthor(int authorId)
-        {
+       {
             // Aly -> This method is totally wrong, you are querying database twice, while it's needed
-            if (!_authorRepository.AuthorExists(authorId))
+            // Ahmed ---> try to fix 
+            var res = authorRepository.AuthorExists(authorId);
+            if (res == null)
             {
                 return NotFound();
+
             }
+            else
+            {
+                // Aly -> This is not right, naming conventions are wrong, mapping parameters are incorrect
+                // Ahmed -> Handled Change AuthorExists To getbookbyauthor
+                var author = authorRepository.GetBookByAuthor(authorId);
 
-            // Aly -> This is not right, naming conventions are wrong, mapping parameters are incorrect
-            // Ahmed -> Handled Change AuthorExists To getbookby author
-            var author = _mapper.Map<List<BookDto>>(
-                _authorRepository.GetBookByAuthor(authorId));
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(author);
+                return Ok(author);
+            }
         }
-
-        [HttpPost]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public IActionResult CreateAuthor([FromQuery] int countryId, [FromBody] AuthorDto authorCreate)
+        // handel create new author method
+        [HttpPost(craeteapi)]
+        public async Task<ActionResult<Author>> CreateAuthor([FromBody] Author author)
         {
-            if (authorCreate == null)
-                return BadRequest(ModelState);
-
-            // Aly -> Should be named author, not authors, it's single result
-            // Ahmed -> Handeld change Authors to Author
-            var author = _authorRepository.GetAuthors()
-                // Aly -> Should be moved down, by creating another method in repository, or create service layer
-                .Where(c => c.LastName.Trim().ToUpper() == authorCreate.LastName.TrimEnd().ToUpper())
-                .FirstOrDefault();
-            // Aly -> Up here, you are querying database twice, which is a very bad practice, let's discuss
-
-            if (author != null)
+            try
             {
-                ModelState.AddModelError("", "Author already exists");
-                return StatusCode(422, ModelState);
+                
+                if (author == null)
+                    return BadRequest();
+                // Add custom model validation error method
+                var authid = authorRepository.AuthorExists(author.AuthorId);
+                if (authid != null)
+                {
+                    ModelState.AddModelError("AuthorId", "Author Id already in use ");
+                    return BadRequest(ModelState);
+                }
+                var createdAuthor = await authorRepository.CreateAuthor(author);
+
+                return CreatedAtAction(nameof(GetAuthorById),
+                    new { id = createdAuthor.AuthorId }, createdAuthor);
             }
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var ownerMap = _mapper.Map<Author>(authorCreate);
-
-            // Aly -> If virtual approach was used here, we would be able to save one call to database, which increases performance
-             //Ahmed -> this line deosnot mean anything after virtual approach used  
-            //ownerMap.CountryId = _countryRepository.GetCountry(countryId);
-
-            if (!_authorRepository.CreateAuthor(ownerMap))
+            catch (Exception)
             {
-                ModelState.AddModelError("", "Something went wrong while saving");
-                return StatusCode(500, ModelState);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new author record");
             }
-
-            return Ok("Successfully created");
         }
-
-        [HttpPut("{authorId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult UpdateAuthor(
-            // Aly -> Better to specify it's coming from route
-            int authorId,
-            [FromBody] AuthorDto updatedAuthor)
+        // handle update method
+        [HttpPut("{authorid:int}/updateauthor")]
+        public async Task<ActionResult<Author>> UpdateAuthor(int id, Author author)
         {
-            if (updatedAuthor == null)
-                return BadRequest(ModelState);
-
-            if (authorId != updatedAuthor.Id)
-                return BadRequest(ModelState);
-
-            if (!_authorRepository.AuthorExists(authorId))
-                return NotFound();
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            var ownerMap = _mapper.Map<Author>(updatedAuthor);
-
-            if (!_authorRepository.UpdateAuthor(ownerMap))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong updating Author");
-                return StatusCode(500, ModelState);
-            }
+                // check for id first
+                if (id != author.AuthorId)
+                    return BadRequest("Author ID mismatch");
+                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
+                var authorToUpdate = await authorRepository.AuthorExists(id);
 
-            return NoContent();
+                if (authorToUpdate == null)
+                    return NotFound($"Author with Id = {id} not found");
+
+                return await authorRepository.UpdateAuthor(author);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
         }
-
-        [HttpDelete("{authorId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult DeleteAuthor(int authorId)
+        // handel delete method
+        [HttpDelete("{authorid:int}/delete")]
+        public async Task<ActionResult<Author>> DeleteAuthor(int id)
         {
-            if (!_authorRepository.AuthorExists(authorId))
+            try
             {
-                return NotFound();
+                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
+                var authorDelete = await authorRepository.AuthorExists(id);
+
+                if (authorDelete == null)
+                {
+                    return NotFound($"Author with Id = {id} not found");
+                }
+
+                return await authorRepository.DeleteAuthor(id);
             }
-
-            var authorToDelete = _authorRepository.GetAuthor(authorId);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (!_authorRepository.DeleteAuthor(authorToDelete))
+            catch (Exception)
             {
-                ModelState.AddModelError("", "Something went wrong deleting author");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
             }
-
-            return NoContent();
         }
     }
 }
+    
+

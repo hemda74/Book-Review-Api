@@ -5,14 +5,15 @@ namespace BookReviewApp.Interfaces
     public interface IAuthorRepository
     {
         // Ahmed Change Get Author -> Get Authors
-        ICollection<Author> GetAuthors();
-        Author GetAuthor (int authorId);
-        ICollection<Author> GetAuthorOfBook(int bookId);
-        ICollection<Book> GetBookByAuthor(int athourId);
-        bool AuthorExists(int authorId);
-        bool CreateAuthor(Author author);
-        bool UpdateAuthor(Author author);
-        bool DeleteAuthor(Author author);
-        bool Save();
+        // update interface to use async programming 
+        Task<IEnumerable<Author>> GetAuthors();
+        Task<Author> GetAuthorById (int authorId);
+        ICollection<Author> GetAuthorOfABook(int bookId);
+        ICollection<Book> GetBookByAuthor(int authorId);
+        Task<IEnumerable<Author>> AuthorExists(int authorId);
+        Task<Author> CreateAuthor(Author author);
+        Task<Author> UpdateAuthor(Author author);
+        Task<Author> DeleteAuthor(int authorId);
+        
     }
 }
