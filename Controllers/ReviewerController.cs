@@ -121,8 +121,3 @@ namespace BookReviewApp.Controllers
     }
 }
     
-
-
-
-    } 
-}

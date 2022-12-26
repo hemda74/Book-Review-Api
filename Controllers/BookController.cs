@@ -56,8 +56,8 @@ namespace BookReviewApp.Controllers
                 }
             }
             // handel get book by Name method 
-            [HttpGet("{bookname:string}")]
-            public async Task<ActionResult<Book>> GetAuthorByName(string name)
+            [HttpGet("{bookname}")]
+            public async Task<ActionResult<Book>> GetBookByName(string name)
             {
                 try
                 {
@@ -161,7 +161,7 @@ namespace BookReviewApp.Controllers
                 }
             }
             // handel delete method
-            [HttpDelete("{bookid:int}/delete")]
+            [HttpDelete("{bookid:int}/deletebook")]
             public async Task<ActionResult<Book>> DeleteBook(int id)
             {
                 try

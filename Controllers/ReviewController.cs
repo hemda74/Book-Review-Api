@@ -1,182 +1,180 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using BookReviewApp.Dto;
+﻿using BookReviewApp.Dto;
 using BookReviewApp.Interfaces;
 using BookReviewApp.Models;
+using BookReviewApp.Repository;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BookReviewApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ReviewController : Controller
+    public class ReviewController : ControllerBase
     {
-        private readonly IReviewRepository _reviewRepository;
-        private readonly IMapper _mapper;
-        private readonly IReviewerRepository _reviewerRepository;
-        private readonly IBookRepository _bookRepository;
+        private readonly IReviewRepository reviewRepository;
+        private readonly IReviewerRepository reviewerRepository;
+        private readonly IBookRepository bookRepository;
 
-        public ReviewController(IReviewRepository reviewRepository, 
-            IMapper mapper,
-            IBookRepository bookRepository,
-            IReviewerRepository reviewerRepository)
+        public ReviewController(IReviewRepository reviewRepository, IReviewerRepository reviewerRepository, IBookRepository bookRepository)
         {
-            _reviewRepository = reviewRepository;
-            _mapper = mapper;
-            _reviewerRepository = reviewerRepository;
-            _bookRepository = bookRepository;
+            this.reviewRepository = reviewRepository;
+            this.reviewerRepository = reviewerRepository;
+            this.bookRepository = bookRepository;
         }
-
+        // handel get all reviews 
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Review>))]
-        public IActionResult GetReviews()
+        public async Task<ActionResult> GetReviews()
         {
-            var reviews = _mapper.Map<List<ReviewDto>>(_reviewRepository.GetReviews());
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(reviews);
+            try
+            {
+                return Ok(await reviewRepository.GetReviews());
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
         }
+        // handel get reviewer by id method 
+        [HttpGet("{reviewid:int}")]
+        public async Task<ActionResult<Review>> GetReview(int id)
+        {
+            try
+            {
+                var result = await reviewRepository.GetReview(id);
 
-        [HttpGet("{reviewId}")]
+                if (result == null) return NotFound();
+
+                return result;
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+        // check if review exists or not 
+        [HttpGet("{reviewid:int}")]
+        public async Task<ActionResult<Review>> ReviewExists(int id)
+        {
+            try
+            {
+                var result = await reviewRepository.ReviewExists(id);
+
+                if (result == null) return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+        // handle get reviews of abook
+        [HttpGet("book/{revId}")]
         [ProducesResponseType(200, Type = typeof(Review))]
         [ProducesResponseType(400)]
-        public IActionResult GetBook(int reviewId)
+        public IActionResult GetReviewsOfABook(int revId)
         {
-            if (!_reviewRepository.ReviewExists(reviewId))
-                return NotFound();
-
-            var review = _mapper.Map<ReviewDto>(_reviewRepository.GetReview(reviewId));
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(review);
-        }
-
-        [HttpGet("book/{bookId}")]
-        [ProducesResponseType(200, Type = typeof(Review))]
-        [ProducesResponseType(400)]
-        public IActionResult GetReviewsForAPokemon(int bookId)
-        {
-            var reviews = _mapper.Map<List<ReviewDto>>(_reviewRepository.GetReviewsOfABook(bookId));
+            var reviews = reviewRepository.GetReviewsOfABook(revId);
 
             if (!ModelState.IsValid)
                 return BadRequest();
 
             return Ok(reviews);
         }
-
-        [HttpPost]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public IActionResult CreateReview([FromQuery] int reviewerId, [FromQuery]int bookId, [FromBody] ReviewDto reviewCreate)
+        // handel delete method
+        [HttpDelete("{reviewId:int}/deletereview")]
+        public async Task<ActionResult<Review>> DeleteReview(int id)
         {
-            if (reviewCreate == null)
-                return BadRequest(ModelState);
-
-            var reviews = _reviewRepository.GetReviews()
-                .Where(c => c.Title.Trim().ToUpper() == reviewCreate.Title.TrimEnd().ToUpper())
-                .FirstOrDefault();
-
-            if (reviews != null)
+            try
             {
-                ModelState.AddModelError("", "Review already exists");
-                return StatusCode(422, ModelState);
+                var authorDelete = await reviewRepository.ReviewExists(id);
+
+                if (authorDelete == null)
+                {
+                    return NotFound($"Reviewer with Id = {id} not found");
+                }
+
+                return await reviewRepository.DeleteReview(id);
             }
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var reviewMap = _mapper.Map<Review>(reviewCreate);
-
-            reviewMap.Book = _bookRepository.GetBook(bookId);
-            reviewMap.Reviewer = _reviewerRepository.GetReviewer(reviewerId);
-            
-
-            if (!_reviewRepository.CreateReview(reviewMap))
+            catch (Exception)
             {
-                ModelState.AddModelError("", "Something went wrong while saving");
-                return StatusCode(500, ModelState);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
             }
-
-            return Ok("Successfully created");
         }
-
-        [HttpPut("{reviewId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult UpdateReview(int reviewId, [FromBody] ReviewDto updatedReview)
+        // handle update method
+        [HttpPut("{reviewid:int}/updatereview")]
+        public async Task<ActionResult<Review>> UpdateReview(int id, Review auth)
         {
-            if (updatedReview == null)
-                return BadRequest(ModelState);
-
-            if (reviewId != updatedReview.Id)
-                return BadRequest(ModelState);
-
-            if (!_reviewRepository.ReviewExists(reviewId))
-                return NotFound();
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            var reviewMap = _mapper.Map<Review>(updatedReview);
-
-            if (!_reviewRepository.UpdateReview(reviewMap))
+            try
             {
-                ModelState.AddModelError("", "Something went wrong updating review");
-                return StatusCode(500, ModelState);
+                // check for id first
+                if (id != auth.ReviewId)
+                    return BadRequest("Review ID mismatch");
+                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
+                var authorToUpdate = await reviewRepository.ReviewExists(id);
+
+                if (authorToUpdate == null)
+                    return NotFound($"Author with Id = {id} not found");
+
+                return await reviewRepository.UpdateReview(auth);
             }
-
-            return NoContent();
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
         }
-
-        [HttpDelete("{reviewId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult DeleteReview(int reviewId)
+        // handel create new author method
+        [HttpPost("createreview")]
+        public async Task<ActionResult<Review>> CreateReview([FromBody] Review review)
         {
-            if (!_reviewRepository.ReviewExists(reviewId))
+            try
             {
-                return NotFound();
+
+                if (review == null)
+                    return BadRequest();
+                // Add custom model validation error method
+                var authid = reviewRepository.ReviewExists(review.ReviewId);
+                if (authid != null)
+                {
+                    ModelState.AddModelError("ReviewId", "Review Id already in use ");
+                    return BadRequest(ModelState);
+                }
+                var createdReview = await reviewRepository.CreateReview(review);
+
+                return CreatedAtAction(nameof(GetReview),
+                    new { id = createdReview.ReviewId }, createdReview);
             }
-
-            var reviewToDelete = _reviewRepository.GetReview(reviewId);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (!_reviewRepository.DeleteReview(reviewToDelete))
+            catch (Exception)
             {
-                ModelState.AddModelError("", "Something went wrong deleting author");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new author record");
             }
-
-            return NoContent();
         }
-        
         // Added missing delete range of reviews by a reviewer **>CK
         [HttpDelete("/DeleteReviewsByReviewer/{reviewerId}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
     public IActionResult DeleteReviewsByReviewer(int reviewerId)
-    {
-        if (!_reviewerRepository.ReviewerExists(reviewerId))
-            return NotFound();
-
-        var reviewsToDelete = _reviewerRepository.GetReviewsByReviewer(reviewerId).ToList();
-        if (!ModelState.IsValid)
-            return BadRequest();
-
-        if (!_reviewRepository.DeleteReviews(reviewsToDelete))
         {
-            ModelState.AddModelError("", "error deleting reviews");
-            return StatusCode(500, ModelState);
-        }
-        return NoContent();
-    }
+            //if (!reviewerRepository.ReviewerExists(reviewerId))
+            //    return NotFound();
 
+            var reviewsToDelete = reviewerRepository.GetReviewsByReviewer(reviewerId).ToList();
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            if (!reviewRepository.DeleteReviews(reviewsToDelete))
+            {
+                ModelState.AddModelError("", "error deleting reviews");
+                return StatusCode(500, ModelState);
+            }
+            return NoContent();
+        }
     }
 }

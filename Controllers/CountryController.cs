@@ -1,149 +1,172 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using BookReviewApp.Dto;
-using BookReviewApp.Interfaces;
+﻿using BookReviewApp.Interfaces;
 using BookReviewApp.Models;
+using BookReviewApp.Repository;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BookReviewApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CountryController : Controller
+    public class CountryController : ControllerBase
     {
-        private readonly ICountryRepository _countryRepository;
-        private readonly IMapper _mapper;
-
-        public CountryController(ICountryRepository countryRepository, IMapper mapper)
-        {
-            _countryRepository = countryRepository;
-            _mapper = mapper;
+        private readonly ICountryRepository countryRepository;
+        public CountryController(ICountryRepository countryRepository) { 
+        this.countryRepository = countryRepository;
         }
-
+        
+        // handel get all categories
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Country>))]
-        public IActionResult GetCountries()
+        public async Task<ActionResult> GetCountries()
         {
-            var countries = _mapper.Map<List<CountryDto>>(_countryRepository.GetCountries());
+            try
+            {
+                return Ok(await countryRepository.GetCountries());
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+        }
+        // handel get country by id method 
+        [HttpGet("{countryid:int}")]
+        public async Task<ActionResult<Country>> GetCountryById(int id)
+        {
+            try
+            {
+                var result = await countryRepository.GetCountryById(id);
 
-            return Ok(countries);
+                if (result == null) return NotFound();
+
+                return result;
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
+        }
+        // handel get book by Name method 
+        [HttpGet("{countryname}")]
+        public async Task<ActionResult<Country>> GetCountryByName(string name)
+        {
+            try
+            {
+                var result = await countryRepository.GetCountryByName(name);
+
+                if (result == null) return NotFound();
+
+                return result;
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
+            }
         }
 
-        [HttpGet("{countryId}")]
-        [ProducesResponseType(200, Type = typeof(Country))]
-        [ProducesResponseType(400)]
-        public IActionResult GetCountry(int countryId)
+        [HttpPost("addcountry")]
+        public async Task<ActionResult<Country>> AddCountry([FromBody] Country country)
         {
-            if (!_countryRepository.CountryExists(countryId))
-                return NotFound();
+            try
+            {
 
-            var country = _mapper.Map<CountryDto>(_countryRepository.GetCountry(countryId));
+                if (country == null)
+                    return BadRequest();
+                // Add custom model validation error method
+                var catid = countryRepository.CountryExists(country.CountryId);
+                if (catid != null)
+                {
+                    ModelState.AddModelError("CountryId", "Countryry Id already in use ");
+                    return BadRequest(ModelState);
+                }
+                var createdCan = await countryRepository.AddCountry(country);
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(country);
+                return CreatedAtAction(nameof(GetCountryById),
+                    new { id = createdCan.CountryId }, createdCan);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new Country record");
+            }
         }
-
         [HttpGet("/authors/{authorId}")]
         [ProducesResponseType(400)]
         [ProducesResponseType(200, Type = typeof(Country))]
         public IActionResult GetCountryOfAnAuthor(int authorId)
         {
-            var country = _mapper.Map<CountryDto>(
-                _countryRepository.GetCountryIdByAuthor(authorId));
+            var country = countryRepository.GetCountryIdByAuthor(authorId);
 
             if (!ModelState.IsValid)
                 return BadRequest();
 
             return Ok(country);
         }
-
-        [HttpPost]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public IActionResult CreateCountry([FromBody] CountryDto countryCreate)
+        [HttpGet("{countryid:int}")]
+        public async Task<ActionResult<Country>> CountryExists(int id)
         {
-            if (countryCreate == null)
-                return BadRequest(ModelState);
-
-            var country = _countryRepository.GetCountries()
-                .Where(c => c.Name.Trim().ToUpper() == countryCreate.Name.TrimEnd().ToUpper())
-                .FirstOrDefault();
-
-            if (country != null)
+            try
             {
-                ModelState.AddModelError("", "Country already exists");
-                return StatusCode(422, ModelState);
+                var result = await countryRepository.CountryExists(id);
+
+                if (result == null) return NotFound();
+
+                return Ok(result);
             }
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var countryMap = _mapper.Map<Country>(countryCreate);
-
-            if (!_countryRepository.CreateCountry(countryMap))
+            catch (Exception)
             {
-                ModelState.AddModelError("", "Something went wrong while saving");
-                return StatusCode(500, ModelState);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error retrieving data from the database");
             }
+        }
+        // handle update method
+        [HttpPut("{countryid:int}/updatecountry")]
+        public async Task<ActionResult<Country>> UpdateCountry(int id, Country country)
+        {
+            try
+            {
+                // check for id first
+                if (id != country.CountryId)
+                    return BadRequest("Country Id mismatch");
+                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
+                var catToUpdate = await countryRepository.CountryExists(id);
 
-            return Ok("Successfully created");
+                if (catToUpdate == null)
+                    return NotFound($"Category with Id = {id} not found");
+
+                return await countryRepository.UpdateCountry(country);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+        // handel delete method
+        [HttpDelete("{country:int}/deletecountry")]
+        public async Task<ActionResult<Country>> DeleteCountry(int id)
+        {
+            try
+            {
+                
+                var catDelete = await countryRepository.CountryExists(id);
+
+                if (catDelete == null)
+                {
+                    return NotFound($"Country with Id = {id} not found");
+                }
+
+                return await countryRepository.DeleteCountry(id);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
         }
 
-        [HttpPut("{countryId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult UpdateCategory(int countryId, [FromBody] CountryDto updatedCountry)
-        {
-            if (updatedCountry == null)
-                return BadRequest(ModelState);
-
-            if (countryId != updatedCountry.Id)
-                return BadRequest(ModelState);
-
-            if (!_countryRepository.CountryExists(countryId))
-                return NotFound();
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            var countryMap = _mapper.Map<Country>(updatedCountry);
-
-            if (!_countryRepository.UpdateCountry(countryMap))
-            {
-                ModelState.AddModelError("", "Something went wrong updating country");
-                return StatusCode(500, ModelState);
-            }
-
-            return NoContent();
-        }
-
-        [HttpDelete("{countryId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult DeleteCountry(int countryId)
-        {
-            if (!_countryRepository.CountryExists(countryId))
-            {
-                return NotFound();
-            }
-
-            var countryToDelete = _countryRepository.GetCountry(countryId);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (!_countryRepository.DeleteCountry(countryToDelete))
-            {
-                ModelState.AddModelError("", "Something went wrong deleting country");
-            }
-
-            return NoContent();
-        }
     }
 }

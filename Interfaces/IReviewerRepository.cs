@@ -11,6 +11,6 @@ namespace BookReviewApp.Interfaces
         Task<Reviewer> CreateReviewer(Reviewer reviewer);
         Task<Reviewer> UpdateReviewer(Reviewer reviewer);
         Task<Reviewer> DeleteReviewer(int reviewerId);
-       
+        
     }
 }

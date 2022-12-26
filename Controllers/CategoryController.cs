@@ -17,7 +17,7 @@ namespace BookReviewApp.Controllers
             this.categoryRepository = categoryRepository;
             this.bookRepository = bookRepository;
         }
-        // handel get all authors 
+        // handel get all categories
         [HttpGet]
         public async Task<ActionResult> GetCategories()
         {
@@ -32,7 +32,7 @@ namespace BookReviewApp.Controllers
             }
 
         }
-        // handel get author by id method 
+        // handel get Category by id method 
         [HttpGet("{categoryid:int}")]
         public async Task<ActionResult<Category>> GetCategoryById(int id)
         {
@@ -80,7 +80,7 @@ namespace BookReviewApp.Controllers
             else
             {
                 // Aly -> This is not right, naming conventions are wrong, mapping parameters are incorrect
-                // Ahmed -> Handled Change AuthorExists To getbookbyauthor
+                // Ahmed Handeled 
                 var books = bookRepository.GetBookById(bookId);
 
                 if (!ModelState.IsValid)
@@ -139,7 +139,7 @@ namespace BookReviewApp.Controllers
                 }
             }
             // handel delete method
-            [HttpDelete("{category:int}/delete")]
+            [HttpDelete("{category:int}/deletecategory")]
             public async Task<ActionResult<Category>> DeleteCategory(int id)
             {
                 try

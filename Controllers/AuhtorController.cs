@@ -148,7 +148,7 @@ namespace BookReviewApp.Controllers
             }
         }
         // handel delete method
-        [HttpDelete("{authorid:int}/delete")]
+        [HttpDelete("{authorid:int}/deleteauthor")]
         public async Task<ActionResult<Author>> DeleteAuthor(int id)
         {
             try

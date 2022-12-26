@@ -5,15 +5,14 @@ namespace BookReviewApp.Interfaces
 {
     public interface ICountryRepository
     {
-        ICollection<Country> GetCountries();
+        Task<IEnumerable<Country>> GetCountries();
     
-        Country GetCountry(int id);
-        int GetCountryIdByAuthor (int authorId);
-        ICollection<Author> GetAuthorsFromACountry(int countryId);
-        bool CountryExists(int id);
-        bool CreateCountry(Country country);
-        bool UpdateCountry(Country country);
-        bool DeleteCountry(Country country);
-        bool Save();
+        Task<Country> GetCountryById (int countryId);
+        Task<Country> GetCountryByName(string name);
+        Country GetCountryIdByAuthor (int authorId);
+        Task<IEnumerable<Country>> CountryExists(int countryId);
+        Task<Country> AddCountry(Country country);
+        Task<Country> UpdateCountry(Country country);
+        Task<Country> DeleteCountry(int countryId);
     }
 }
