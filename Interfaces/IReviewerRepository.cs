@@ -4,13 +4,13 @@ namespace BookReviewApp.Interfaces
 {
     public interface IReviewerRepository
     {
-        ICollection<Reviewer> GetReviewers();
-        Reviewer GetReviewer(int reviewerId);
+        Task<IEnumerable<Reviewer>> GetReviewers();
+        Task<Reviewer> GetReviewer(int reviewerId);
         ICollection<Review> GetReviewsByReviewer(int reviewerId);
-        bool ReviewerExists(int reviewerId);
-        bool CreateReviewer(Reviewer reviewer);
-        bool UpdateReviewer(Reviewer reviewer);
-        bool DeleteReviewer(Reviewer reviewer);
-        bool Save();
+        Task<IEnumerable<Reviewer>> ReviewerExists(int reviewerId);
+        Task<Reviewer> CreateReviewer(Reviewer reviewer);
+        Task<Reviewer> UpdateReviewer(Reviewer reviewer);
+        Task<Reviewer> DeleteReviewer(int reviewerId);
+       
     }
 }
