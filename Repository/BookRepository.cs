@@ -89,7 +89,6 @@ namespace BookReviewApp.Repository
 
                 if (result != null)
                 {
-                    result.AuthorId = book.BookId;
                     book.BookId = book.BookId;
                     result.BookName = book.BookName;
                     result.ReleaseDateUTC = book.ReleaseDateUTC;

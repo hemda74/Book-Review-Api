@@ -73,7 +73,6 @@ namespace BookReviewApp.Repository
 
             if (result != null)
             {
-                result.ReviewerId = reviewer.ReviewerId;
                 result.FirstName = reviewer.FirstName;
                 result.LastName = reviewer.LastName;
                 

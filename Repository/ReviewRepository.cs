@@ -81,7 +81,6 @@ namespace BookReviewApp.Repository
 
             if (result != null)
             {
-                result.ReviewerId = review.ReviewerId;
                 result.ReviewId = review.ReviewId;
                 result.Title = review.Title;
                 result.Text= review.Text;

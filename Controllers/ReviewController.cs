@@ -4,6 +4,8 @@ using BookReviewApp.Models;
 using BookReviewApp.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
 namespace BookReviewApp.Controllers
 {
@@ -54,7 +56,7 @@ namespace BookReviewApp.Controllers
             }
         }
         // check if review exists or not 
-        [HttpGet("{reviewid:int}")]
+        [HttpGet("{reviewid:int}/Exists ")]
         public async Task<ActionResult<Review>> ReviewExists(int id)
         {
             try

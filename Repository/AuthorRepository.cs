@@ -74,7 +74,6 @@ namespace BookReviewApp.Repository
 
             if (result != null)
             {
-                result.AuthorId = author.AuthorId;
                 result.FirstName = author.FirstName;
                 result.LastName = author.LastName;
                 result.Gym = author.Gym;

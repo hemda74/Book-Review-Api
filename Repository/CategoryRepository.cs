@@ -76,7 +76,6 @@ namespace BookReviewApp.Repository
 
                 if (result != null)
                 {
-                    result.CategoryId = category.CategoryId;
                     result.Name = category.Name;
                     await _context.SaveChangesAsync();
 

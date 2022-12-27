@@ -1,7 +1,10 @@
 ﻿using BookReviewApp.Interfaces;
 using BookReviewApp.Models;
 using BookReviewApp.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 
 namespace BookReviewApp.Controllers
 {
@@ -50,7 +53,7 @@ namespace BookReviewApp.Controllers
                     "Error retrieving data from the database");
             }
         }
-        [HttpGet("{categoryid:int}")]
+        [HttpGet("{categoryid:int}/Exists ")]
         public async Task<ActionResult<Category>> CategoryExists(int id)
         {
             try
@@ -89,77 +92,77 @@ namespace BookReviewApp.Controllers
                 return Ok(books);
             }
         }
-            [HttpPost("createcategory")]
-            public async Task<ActionResult<Category>> CreateCategory([FromBody] Category category)
+        [HttpPost("createcategory")]
+        public async Task<ActionResult<Category>> CreateCategory([FromBody] Category category)
+        {
+            try
             {
-                try
-                {
 
-                    if (category == null)
-                        return BadRequest();
-                    // Add custom model validation error method
-                    var catid = categoryRepository.CategoryExists(category.CategoryId);
-                    if (catid != null)
-                    {
-                        ModelState.AddModelError("CategoryId", "Category Id already in use ");
-                        return BadRequest(ModelState);
-                    }
-                    var createdCat = await categoryRepository.CreateCategory(category);
-
-                    return CreatedAtAction(nameof(GetCategoryById),
-                        new { id = createdCat.CategoryId }, createdCat);
-                }
-                catch (Exception)
+                if (category == null)
+                    return BadRequest();
+                // Add custom model validation error method
+                var catid = categoryRepository.CategoryExists(category.CategoryId);
+                if (catid != null)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        "Error creating new category record");
+                    ModelState.AddModelError("CategoryId", "Category Id already in use ");
+                    return BadRequest(ModelState);
                 }
+                var createdCat = await categoryRepository.CreateCategory(category);
+
+                return CreatedAtAction(nameof(GetCategoryById),
+                    new { id = createdCat.CategoryId }, createdCat);
             }
-            // handle update method
-            [HttpPut("{categoryid:int}/updatecategory")]
-            public async Task<ActionResult<Category>> UpdateCategory(int id, Category category)
+            catch (Exception)
             {
-                try
-                {
-                    // check for id first
-                    if (id != category.CategoryId)
-                        return BadRequest("Category ID mismatch");
-                    // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
-                    var catToUpdate = await categoryRepository.CategoryExists(id);
-
-                    if (catToUpdate == null)
-                        return NotFound($"Category with Id = {id} not found");
-
-                    return await categoryRepository.UpdateCategory(category);
-                }
-                catch (Exception)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        "Error updating data");
-                }
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error creating new category record");
             }
-            // handel delete method
-            [HttpDelete("{category:int}/deletecategory")]
-            public async Task<ActionResult<Category>> DeleteCategory(int id)
+        }
+        // handle update method
+        [HttpPut("{categoryid:int}/updatecategory")]
+        public async Task<ActionResult<Category>> UpdateCategory(int id, Category category)
+        {
+            try
             {
-                try
-                {
-                    // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
-                    var catDelete = await categoryRepository.CategoryExists(id);
+                // check for id first
+                if (id != category.CategoryId)
+                    return BadRequest("Category ID mismatch");
+                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
+                var catToUpdate = await categoryRepository.CategoryExists(id);
 
-                    if (catDelete == null)
-                    {
-                        return NotFound($"Category with Id = {id} not found");
-                    }
+                if (catToUpdate == null)
+                    return NotFound($"Category with Id = {id} not found");
 
-                    return await categoryRepository.DeleteCategory(id);
-                }
-                catch (Exception)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError,
-                        "Error deleting data");
-                }
+                return await categoryRepository.UpdateCategory(category);
             }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error updating data");
+            }
+        }
+        // handel delete method
+        [HttpDelete("{category:int}/deletecategory")]
+        public async Task<ActionResult<Category>> DeleteCategory(int id)
+        {
+            try
+            {
+                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
+                var catDelete = await categoryRepository.CategoryExists(id);
+
+                if (catDelete == null)
+                {
+                    return NotFound($"Category with Id = {id} not found");
+                }
+
+                return await categoryRepository.DeleteCategory(id);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Error deleting data");
+            }
+        }
    }
 }
 

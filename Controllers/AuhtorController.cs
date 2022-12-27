@@ -1,6 +1,10 @@
 ﻿using BookReviewApp.Interfaces;
 using BookReviewApp.Models;
+using BookReviewApp.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 namespace BookReviewApp.Controllers
 {
     // author conttroler
@@ -13,7 +17,7 @@ namespace BookReviewApp.Controllers
     [ApiController]
     public class AuthorController : ControllerBase
     {
-        private const string craeteapi = "createauthor";
+        
         private readonly IAuthorRepository authorRepository;
         private readonly ICountryRepository countryRepository;
      
@@ -56,7 +60,7 @@ namespace BookReviewApp.Controllers
         }
         /////////////////////////////////////////////////
         // Ahmed  is that method right or how should i code it ?
-        [HttpGet("{authorid:int}")]
+        [HttpGet("{authorid:int}/exsists")]
         public async Task<ActionResult<Author>> AuthorExists(int id)
         {
             try
@@ -98,7 +102,7 @@ namespace BookReviewApp.Controllers
             }
         }
         // handel create new author method
-        [HttpPost(craeteapi)]
+        [HttpPost("createauthor")]
         public async Task<ActionResult<Author>> CreateAuthor([FromBody] Author author)
         {
             try

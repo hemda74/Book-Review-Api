@@ -1,6 +1,10 @@
 ﻿using BookReviewApp.Interfaces;
 using BookReviewApp.Models;
+using BookReviewApp.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 namespace BookReviewApp.Controllers
 {
     // book conttroler
@@ -74,7 +78,7 @@ namespace BookReviewApp.Controllers
                 }
             }
             // Ahmed  is that method right or how should i code it ?
-            [HttpGet("{bookid:int}")]
+            [HttpGet("{bookid:int}/exists")]
             public async Task<ActionResult<Book>> BookExists(int id)
             {
                 try

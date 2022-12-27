@@ -3,7 +3,8 @@ using BookReviewApp.Models;
 using BookReviewApp.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
+using System;
+using System.Threading.Tasks;
 namespace BookReviewApp.Controllers
 {
     [Route("api/[controller]")]
@@ -105,7 +106,7 @@ namespace BookReviewApp.Controllers
 
             return Ok(country);
         }
-        [HttpGet("{countryid:int}")]
+        [HttpGet("{countryid:int}/Exists")]
         public async Task<ActionResult<Country>> CountryExists(int id)
         {
             try

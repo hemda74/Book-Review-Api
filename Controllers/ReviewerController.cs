@@ -3,7 +3,8 @@ using BookReviewApp.Models;
 using BookReviewApp.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
+using System;
+using System.Threading.Tasks;
 // new controller base 
 namespace BookReviewApp.Controllers
 {
@@ -50,7 +51,7 @@ namespace BookReviewApp.Controllers
                     "Error retrieving data from the database");
             }
         }
-        [HttpGet("{reviewerid:int}")]
+        [HttpGet("{reviewerid:int}/Exists ")]
         public async Task<ActionResult<Reviewer>> ReviewerExists(int id)
         {
             try
@@ -66,11 +67,6 @@ namespace BookReviewApp.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Error retrieving data from the database");
             }
-        }
-
-        public IReviewerRepository GetReviewersRepository()
-        {
-            return ReviewersRepository;
         }
 
         // handle update method
