@@ -9,19 +9,12 @@ namespace BookReviewApp.Controllers
 {
     // author conttroler
     // 1- add asyncrouns programming 
-    // 2- try to fix query db twice
-    // plaese look at  --> changes in author exists method 
-    // i can't find any value of DTO so i stoped working with it  
-    // you will find old author controller commented if it need to be reviewed  
+    // 2- fix query db twice
     [Route("api/[controller]")]
     [ApiController]
     public class AuthorController : ControllerBase
     {
-        
         private readonly IAuthorRepository authorRepository;
-        private readonly ICountryRepository countryRepository;
-     
-
         public AuthorController(IAuthorRepository authorRepository)
         {
             this.authorRepository = authorRepository;
@@ -58,16 +51,15 @@ namespace BookReviewApp.Controllers
                     "Error retrieving data from the database");
             }
         }
-        /////////////////////////////////////////////////
-        // Ahmed  is that method right or how should i code it ?
+        // check if author exsists 
         [HttpGet("{authorid:int}/exsists")]
-        public async Task<ActionResult<Author>> AuthorExists(int id)
+        public async Task<ActionResult<bool>> AuthorExists(int id)
         {
             try
             {
                 var result = await authorRepository.AuthorExists(id);
 
-                if (result == null) return NotFound();
+                if (!result ) return NotFound();
 
                 return Ok(result);
             }
@@ -79,27 +71,42 @@ namespace BookReviewApp.Controllers
         }
         // get book by author method
         [HttpGet("{authorid:int}/book")]
-        public IActionResult GetBookByAuthor(int authorId)
+        public async Task<ActionResult<Book>> GetBookByAuthor(int authorId)
        {
             // Aly -> This method is totally wrong, you are querying database twice, while it's needed
             // Ahmed ---> try to fix 
-            var res = authorRepository.AuthorExists(authorId);
-            if (res == null)
+            try
             {
-                return NotFound();
+                // final 
+                var book = await authorRepository.GetBookByAuthor(authorId);
+                if (book == null)
+                    return NotFound();
 
+                return Ok(book);
             }
-            else
+            catch(Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   "Error retrieving data from the database");
+            }
+                
+         }
+        [HttpGet("{authorid:int}/country")]
+        public async Task<ActionResult<Country>> GetCountryByAuthor(int authorId)
+        {
+            try
             {
-                // Aly -> This is not right, naming conventions are wrong, mapping parameters are incorrect
-                // Ahmed -> Handled Change AuthorExists To getbookbyauthor
-                var author = authorRepository.GetBookByAuthor(authorId);
+                var book = await authorRepository.GetCountryByAuthor(authorId);
+                if (book == null)
+                    return NotFound();
 
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
-                return Ok(author);
+                return Ok(book);
             }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                   "Error retrieving data from the database");
+            }
+
         }
         // handel create new author method
         [HttpPost("createauthor")]
@@ -110,13 +117,7 @@ namespace BookReviewApp.Controllers
                 
                 if (author == null)
                     return BadRequest();
-                // Add custom model validation error method
-                var authid = authorRepository.AuthorExists(author.AuthorId);
-                if (authid != null)
-                {
-                    ModelState.AddModelError("AuthorId", "Author Id already in use ");
-                    return BadRequest(ModelState);
-                }
+               
                 var createdAuthor = await authorRepository.CreateAuthor(author);
 
                 return CreatedAtAction(nameof(GetAuthorById),
@@ -130,18 +131,13 @@ namespace BookReviewApp.Controllers
         }
         // handle update method
         [HttpPut("{authorid:int}/updateauthor")]
-        public async Task<ActionResult<Author>> UpdateAuthor(int id, Author author)
+        public async Task<ActionResult<Author>> UpdateAuthor( Author author)
         {
             try
             {
-                // check for id first
-                if (id != author.AuthorId)
-                    return BadRequest("Author ID mismatch");
-                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
-                var authorToUpdate = await authorRepository.AuthorExists(id);
-
-                if (authorToUpdate == null)
-                    return NotFound($"Author with Id = {id} not found");
+                // check for the entered data first
+                if (author.AuthorId <= 0|| author==null )
+                    return BadRequest("Author Id not found ");
 
                 return await authorRepository.UpdateAuthor(author);
             }
@@ -153,19 +149,17 @@ namespace BookReviewApp.Controllers
         }
         // handel delete method
         [HttpDelete("{authorid:int}/deleteauthor")]
-        public async Task<ActionResult<Author>> DeleteAuthor(int id)
+        public async Task<ActionResult> DeleteAuthor(int id)
         {
-            try
-            {
-                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
-                var authorDelete = await authorRepository.AuthorExists(id);
-
-                if (authorDelete == null)
+            try 
+            { 
+                if (id <=0 )
                 {
-                    return NotFound($"Author with Id = {id} not found");
+                    return BadRequest($"Author with Id = {id} not found");
                 }
 
-                return await authorRepository.DeleteAuthor(id);
+                await authorRepository.DeleteAuthor(id);
+                return Ok();
             }
             catch (Exception)
             {

@@ -76,13 +76,7 @@ namespace BookReviewApp.Controllers
 
                 if (country == null)
                     return BadRequest();
-                // Add custom model validation error method
-                var catid = countryRepository.CountryExists(country.CountryId);
-                if (catid != null)
-                {
-                    ModelState.AddModelError("CountryId", "Countryry Id already in use ");
-                    return BadRequest(ModelState);
-                }
+           
                 var createdCan = await countryRepository.AddCountry(country);
 
                 return CreatedAtAction(nameof(GetCountryById),
@@ -94,18 +88,7 @@ namespace BookReviewApp.Controllers
                     "Error creating new Country record");
             }
         }
-        [HttpGet("/authors/{authorId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(200, Type = typeof(Country))]
-        public IActionResult GetCountryOfAnAuthor(int authorId)
-        {
-            var country = countryRepository.GetCountryIdByAuthor(authorId);
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            return Ok(country);
-        }
+        
         [HttpGet("{countryid:int}/Exists")]
         public async Task<ActionResult<Country>> CountryExists(int id)
         {
@@ -113,7 +96,7 @@ namespace BookReviewApp.Controllers
             {
                 var result = await countryRepository.CountryExists(id);
 
-                if (result == null) return NotFound();
+                if (!result) return NotFound();
 
                 return Ok(result);
             }
@@ -125,19 +108,13 @@ namespace BookReviewApp.Controllers
         }
         // handle update method
         [HttpPut("{countryid:int}/updatecountry")]
-        public async Task<ActionResult<Country>> UpdateCountry(int id, Country country)
+        public async Task<ActionResult<Country>> UpdateCountry(Country country)
         {
             try
             {
-                // check for id first
-                if (id != country.CountryId)
+                if (country==null)
                     return BadRequest("Country Id mismatch");
-                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
-                var catToUpdate = await countryRepository.CountryExists(id);
-
-                if (catToUpdate == null)
-                    return NotFound($"Category with Id = {id} not found");
-
+                
                 return await countryRepository.UpdateCountry(country);
             }
             catch (Exception)
@@ -152,15 +129,13 @@ namespace BookReviewApp.Controllers
         {
             try
             {
-                
-                var catDelete = await countryRepository.CountryExists(id);
-
-                if (catDelete == null)
+                if (id <= 0)
                 {
-                    return NotFound($"Country with Id = {id} not found");
+                    return BadRequest($"Country Id not found");
                 }
 
-                return await countryRepository.DeleteCountry(id);
+                 await countryRepository.DeleteCountry(id);
+                return Ok();
             }
             catch (Exception)
             {
@@ -168,6 +143,5 @@ namespace BookReviewApp.Controllers
                     "Error deleting data");
             }
         }
-
     }
 }

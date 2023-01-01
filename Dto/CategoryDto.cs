@@ -1,4 +1,4 @@
-﻿namespace BookReviewApp.Dto
+﻿/*namespace BookReviewApp.Dto
 {
     public class CategoryDto
     {
@@ -7,3 +7,4 @@
 
     }
 }
+*/

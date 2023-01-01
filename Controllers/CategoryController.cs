@@ -8,17 +8,18 @@ using System.Threading.Tasks;
 
 namespace BookReviewApp.Controllers
 {
+    // category contoller 
     [Route("api/[controller]")]
     [ApiController]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryRepository categoryRepository;
-        private readonly IBookRepository bookRepository;
+       
 
         public CategoryController(ICategoryRepository categoryRepository)
         {
             this.categoryRepository = categoryRepository;
-            this.bookRepository = bookRepository;
+           
         }
         // handel get all categories
         [HttpGet]
@@ -60,7 +61,7 @@ namespace BookReviewApp.Controllers
             {
                 var result = await categoryRepository.CategoryExists(id);
 
-                if (result == null) return NotFound();
+                if (!result ) return NotFound();
 
                 return Ok(result);
             }
@@ -74,71 +75,58 @@ namespace BookReviewApp.Controllers
         [HttpGet("{bookid:int}/category")]
         public IActionResult GetBooksOfCategory(int bookId)
         {
-            var res = categoryRepository.CategoryExists(bookId);
-            if (res == null)
+            try
             {
-                return NotFound();
+                var res = categoryRepository.GetBooksOfCategory(bookId);
+                if (res==null)
+                    return NotFound();
 
+                return Ok(res);
             }
-            else
-            {
-                // Aly -> This is not right, naming conventions are wrong, mapping parameters are incorrect
-                // Ahmed Handeled 
-                var books = bookRepository.GetBookById(bookId);
+            catch(Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                         "Error retrieving data from the database");
+            }    
+            
 
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
-                return Ok(books);
-            }
+            
         }
+        // implement create category method 
         [HttpPost("createcategory")]
         public async Task<ActionResult<Category>> CreateCategory([FromBody] Category category)
         {
             try
             {
-
                 if (category == null)
                     return BadRequest();
-                // Add custom model validation error method
-                var catid = categoryRepository.CategoryExists(category.CategoryId);
-                if (catid != null)
-                {
-                    ModelState.AddModelError("CategoryId", "Category Id already in use ");
-                    return BadRequest(ModelState);
-                }
-                var createdCat = await categoryRepository.CreateCategory(category);
 
+                var createdcat = await categoryRepository.CreateCategory(category);
                 return CreatedAtAction(nameof(GetCategoryById),
-                    new { id = createdCat.CategoryId }, createdCat);
+                    new { id = createdcat.CategoryId }, createdcat);
             }
             catch (Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error creating new category record");
+                    "Error creating new author record");
             }
         }
         // handle update method
         [HttpPut("{categoryid:int}/updatecategory")]
-        public async Task<ActionResult<Category>> UpdateCategory(int id, Category category)
+        public async Task<ActionResult<Category>> UpdateCategory( Category category)
         {
-            try
             {
-                // check for id first
-                if (id != category.CategoryId)
-                    return BadRequest("Category ID mismatch");
-                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
-                var catToUpdate = await categoryRepository.CategoryExists(id);
+                try
+                {
+                    if (category == null)
+                        return BadRequest($"category not found ");
 
-                if (catToUpdate == null)
-                    return NotFound($"Category with Id = {id} not found");
-
-                return await categoryRepository.UpdateCategory(category);
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error updating data");
+                    return await categoryRepository.UpdateCategory(category);
+                }
+                catch (Exception)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error updating data");
+                }
             }
         }
         // handel delete method
@@ -147,15 +135,13 @@ namespace BookReviewApp.Controllers
         {
             try
             {
-                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
-                var catDelete = await categoryRepository.CategoryExists(id);
-
-                if (catDelete == null)
+                if (id <= 0)
                 {
-                    return NotFound($"Category with Id = {id} not found");
+                    return BadRequest($"category with Id = {id} not found");
                 }
 
-                return await categoryRepository.DeleteCategory(id);
+                await categoryRepository.DeleteCategory(id);
+                return Ok();
             }
             catch (Exception)
             {

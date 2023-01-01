@@ -1,4 +1,4 @@
-﻿using BookReviewApp.Models;
+﻿/*using BookReviewApp.Models;
 
 namespace BookReviewApp.Dto
 {
@@ -9,3 +9,4 @@ namespace BookReviewApp.Dto
         public string LastName { get; set; }
     }
 }
+*/

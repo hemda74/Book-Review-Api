@@ -1,4 +1,4 @@
-﻿namespace BookReviewApp.Dto
+﻿/*namespace BookReviewApp.Dto
 {
     public class BookDto
     {
@@ -8,3 +8,4 @@
         public DateTime ReleaseDateUTC { get; set; }
     }
 }
+*/

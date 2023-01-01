@@ -8,11 +8,6 @@ using System.Threading.Tasks;
 namespace BookReviewApp.Controllers
 {
     // book conttroler
-    // you will find old bookcontroller in anthor controller commented
-    // 1- add asyncrouns programming 
-    // 2- try to fix query db twice
-    // plaese look at  --> changes in BookExists and GetBookRating method 
-    // i can't find any value of DTO so i stoped working with it  
     namespace BookReviewApp.Controllers
     {
         [Route("api/[controller]")]
@@ -20,8 +15,6 @@ namespace BookReviewApp.Controllers
         public class BookController : ControllerBase
         {
             private readonly IBookRepository bookRepository;
-            private readonly IReviewRepository reviewRepository;
-
             public BookController(IBookRepository bookRepository)
             {
                 this.bookRepository = bookRepository;
@@ -77,15 +70,15 @@ namespace BookReviewApp.Controllers
                         "Error retrieving data from the database");
                 }
             }
-            // Ahmed  is that method right or how should i code it ?
+            // handle book exsits
             [HttpGet("{bookid:int}/exists")]
             public async Task<ActionResult<Book>> BookExists(int id)
             {
                 try
                 {
                     var result = await bookRepository.BookExists(id);
-
-                    if (result == null) return NotFound();
+                    // if res return null value it will return notfound 
+                    if (!result) return NotFound();
 
                     return Ok(result);
                 }
@@ -95,43 +88,39 @@ namespace BookReviewApp.Controllers
                         "Error retrieving data from the database");
                 }
             }
-            // Ahmed --> please look at this method check wether it correct or not and if not please build it correctly
+            // get book rating 
             [HttpGet("{bookid:int}/rating")]
-            public async Task<ActionResult<decimal>> GetBookRating(int bookId)
+            public async Task<ActionResult<decimal?>> GetBookRating(int bookId)
             {
-                var res = await bookRepository.BookExists(bookId);
-                if (res == null)
+                try
                 {
-                    return NotFound();
+                    var res = await bookRepository.GetBookRating(bookId);
+                    if (res == 0)
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        return Ok(res);
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    var book= bookRepository.GetBookRating(bookId);
-                    if(!ModelState.IsValid)
-                        return BadRequest(ModelState);
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Error retrieving data from the database");
+                }
 
-                     return Ok(book);
-                    
-                }  
+
             }
-            // please look at this method too
+            // create method 
             [HttpPost("createbook")]
             public async Task<ActionResult<Book>> CreateBook([FromBody] Book book)
             {
                 try
                 {
-
                     if (book == null)
                         return BadRequest();
-                    // Add custom model validation error method
-                    var authid = bookRepository.BookExists(book.BookId);
-                    if (authid != null)
-                    {
-                        ModelState.AddModelError("BookId", "Book Id already in use ");
-                        return BadRequest(ModelState);
-                    }
                     var createdBook = await bookRepository.CreateBook(book);
-
                     return CreatedAtAction(nameof(GetBookById),
                         new { id = createdBook.BookId }, createdBook);
                 }
@@ -143,18 +132,13 @@ namespace BookReviewApp.Controllers
             }
             // handle update method
             [HttpPut("{bookid:int}/updatebook")]
-            public async Task<ActionResult<Book>> UpdateAuthor(int id, Book book)
+            public async Task<ActionResult<Book>> UpdateAuthor( Book book)
             {
                 try
                 {
                     // check for id first
-                    if (id != book.BookId)
-                        return BadRequest("Book ID mismatch");
-
-                    var bookUpdate = await bookRepository.GetBookById(id);
-
-                    if (bookUpdate == null)
-                        return NotFound($"Book with Id = {id} not found");
+                    if (book == null)
+                        return BadRequest($"Book ID mismatch");
 
                     return await bookRepository.UpdateBook(book);
                 }
@@ -166,18 +150,17 @@ namespace BookReviewApp.Controllers
             }
             // handel delete method
             [HttpDelete("{bookid:int}/deletebook")]
-            public async Task<ActionResult<Book>> DeleteBook(int id)
+            public async Task<ActionResult> DeleteBook(int id)
             {
                 try
                 {
-                    var bookToDelete = await bookRepository.BookExists(id);
-
-                    if (bookToDelete == null)
+                    if (id <= 0)
                     {
                         return NotFound($"Book with Id = {id} not found");
                     }
 
-                    return await bookRepository.DeleteBook(id);
+                     await bookRepository.DeleteBook(id);
+                    return Ok();
                 }
                 catch (Exception)
                 {

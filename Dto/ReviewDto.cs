@@ -1,4 +1,4 @@
-﻿using BookReviewApp.Models;
+﻿/*using BookReviewApp.Models;
 
 namespace BookReviewApp.Dto
 {
@@ -10,3 +10,4 @@ namespace BookReviewApp.Dto
         public int Rating { get; set; }
     }
 }
+*/

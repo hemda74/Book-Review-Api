@@ -4,6 +4,8 @@ using BookReviewApp.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using System;
+using System.Net;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 
 namespace BookReviewApp.Repository
 {
@@ -15,45 +17,56 @@ namespace BookReviewApp.Repository
         {
             _context = context;
         }
-        // re implementation of authorexists  
-        public async Task<IEnumerable<Author>> AuthorExists(int authorId)
+        // check if author exists or not       
+        public async Task<bool> AuthorExists(int authorId)
         {
-          
-            IQueryable<Author> query = _context.Authors;
-
-            if (authorId != null)
+            // check the validation of author id
+            if (authorId <= 0)
             {
-                query = query.Where(e => e.AuthorId == authorId);
+                throw new ArgumentOutOfRangeException(nameof(authorId));
             }
-
-            return await query.ToListAsync();
-            
+            return  await _context.Authors.AnyAsync(o => o.AuthorId == authorId);
         }
-
-        public async Task<Author> GetAuthorById(int authorId)
+        // get author by id method 
+        public async Task<Author?> GetAuthorById(int authorId)
         {
+            // check the validation of author id
+            if (authorId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(authorId));
+            }
+            
             return await _context.Authors
                 .FirstOrDefaultAsync(e => e.AuthorId == authorId);
         }
-
-        public ICollection<Author> GetAuthorOfABook(int bookId)
+        // any virtual needs include 
+        // final
+        public async Task<Author?> GetAuthorOfABook(int bookId)
         {
-            return _context.Books.Where(p => p.BookId == bookId).Select(o => o.Author).ToList();
+            if (bookId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(bookId));
+            }
+            // "include()" method to work with virtual props for other classes  
+            return (await _context.Books.Include(b=>b.Author).FirstOrDefaultAsync(p => p.BookId == bookId))?.Author;
         }
+        // method to return all authors 
         public async Task<IEnumerable<Author>> GetAuthors()
         {
+
             return await _context.Authors.ToListAsync();
         }
+        // method that takes author record and add it to database 
         public async Task<Author> CreateAuthor(Author author)
         {
             var result = await _context.Authors.AddAsync(author);
             await _context.SaveChangesAsync();
             return result.Entity;
         }
-
-        public async Task<Author> DeleteAuthor(int authorId)
+        // method to delete author record from database 
+        public async Task DeleteAuthor(int authorId)
         {
-            {
+            
                 var result = await _context.Authors
                     .FirstOrDefaultAsync(e => e.AuthorId == authorId);
                 if (result != null)
@@ -61,33 +74,46 @@ namespace BookReviewApp.Repository
                     _context.Authors.Remove(result);
                     await _context.SaveChangesAsync();
                 }
-                return result;
-            }
+                //return Task.CompletedTask;
+            
         }
-
-        ICollection<Book> IAuthorRepository.GetBookByAuthor(int authorId) => _context.Authors.Where(p => p.AuthorId == authorId).Select(p => p.Book).ToList();
-
-        public async Task<Author> UpdateAuthor(Author author)
+        // method return books from author take authorid and return books  
+        public async Task<IEnumerable<Book>?> GetBookByAuthor(int authorId)
         {
-            var result = await _context.Authors
-          .FirstOrDefaultAsync(e => e.AuthorId == author.AuthorId);
 
-            if (result != null)
+            if (authorId <= 0)
             {
+                throw new ArgumentOutOfRangeException(nameof(authorId));
+            }
+            return (await _context.Authors.Include(b => b.Books).FirstOrDefaultAsync(p => p.AuthorId == authorId))?.Books;
+        }
+        public async Task<IEnumerable<Country>?> GetCountryByAuthor(int authorId)
+        {
+            if (authorId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(authorId));
+            }
+            return (await _context.Authors.Include(b => b.Country).FirstOrDefaultAsync(p => p.AuthorId == authorId))?.Country;
+        }
+        // method to update author record 
+        public async Task<Author> UpdateAuthor(Author author)
+        {        
+            if (author.AuthorId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(author));
+            }
+            var result = await _context.Authors
+            .FirstOrDefaultAsync(e => e.AuthorId == author.AuthorId);
+
+            if (result == null) {
+                throw new ArgumentOutOfRangeException(nameof(author));
+            }
                 result.FirstName = author.FirstName;
                 result.LastName = author.LastName;
                 result.Gym = author.Gym;
                 result.Country = author.Country;
-                result.CountryId = author.CountryId;
-                result.Book = author.Book;
-                result.Book = author.Book;
-
                 await _context.SaveChangesAsync();
-
                 return result;
-            }
-
-            return null;
         }
     }
 }

@@ -12,12 +12,12 @@ namespace BookReviewApp.Controllers
     [ApiController]
     public class ReviewerController : ControllerBase
     {
-        private readonly IReviewerRepository ReviewersRepository;
-        private readonly IReviewRepository reviewRepository;
+        private readonly IReviewerRepository reviewersRepository;
+        
 
-        public ReviewerController(IReviewerRepository ReviewersRepository)
+        public ReviewerController(IReviewerRepository reviewersRepository)
         {
-            this.ReviewersRepository = ReviewersRepository;
+            this.reviewersRepository = reviewersRepository;
         }
         // handel get all reviewer 
         [HttpGet]
@@ -25,7 +25,7 @@ namespace BookReviewApp.Controllers
         {
             try
             {
-                return Ok(await ReviewersRepository.GetReviewers());
+                return Ok(await reviewersRepository.GetReviewers());
             }
             catch (Exception)
             {
@@ -39,7 +39,7 @@ namespace BookReviewApp.Controllers
         {
             try
             {
-                var result = await ReviewersRepository.GetReviewer(id);
+                var result = await reviewersRepository.GetReviewer(id);
 
                 if (result == null) return NotFound();
 
@@ -52,13 +52,13 @@ namespace BookReviewApp.Controllers
             }
         }
         [HttpGet("{reviewerid:int}/Exists ")]
-        public async Task<ActionResult<Reviewer>> ReviewerExists(int id)
+        public async Task<ActionResult<bool>> ReviewerExists(int id)
         {
             try
             {
-                var result = await ReviewersRepository.ReviewerExists(id);
+                var result = await reviewersRepository.ReviewerExists(id);
 
-                if (result == null) return NotFound();
+                if (!result) return NotFound();
 
                 return Ok(result);
             }
@@ -71,20 +71,15 @@ namespace BookReviewApp.Controllers
 
         // handle update method
         [HttpPut("{authorid:int}/updateauthor")]
-        public async Task<ActionResult<Reviewer>> UpdateReviewer(int id, Reviewer auth )
+        public async Task<ActionResult<Reviewer>> UpdateReviewer( Reviewer rever)
         {
             try
             {
-                // check for id first
-                if (id != auth.ReviewerId)
-                    return BadRequest("Author ID mismatch");
-                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
-                var authorToUpdate = await ReviewersRepository.ReviewerExists(id);
+                // check for the entered data first
+                if (rever.ReviewerId <= 0 || rever == null)
+                    return BadRequest("Reviewer Id not found ");
 
-                if (authorToUpdate == null)
-                    return NotFound($"Author with Id = {id} not found");
-
-                return await ReviewersRepository.UpdateReviewer(auth);
+                return await reviewersRepository.UpdateReviewer(rever);
             }
             catch (Exception)
             {
@@ -98,15 +93,13 @@ namespace BookReviewApp.Controllers
         {
             try
             {
-                // please check this line like this or this >>>>>>>>>>>>>var authorToUpdate = await authorRepository.GetAuthorById(id);
-                var authorDelete = await ReviewersRepository.ReviewerExists(id);
-
-                if (authorDelete == null)
+                if (id <= 0)
                 {
-                    return NotFound($"Reviewer with Id = {id} not found");
+                    return BadRequest($"Reviewer with Id = {id} not found");
                 }
 
-                return await ReviewersRepository.DeleteReviewer(id);
+                await reviewersRepository.DeleteReviewer(id);
+                return Ok();
             }
             catch (Exception)
             {

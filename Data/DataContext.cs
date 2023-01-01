@@ -16,23 +16,23 @@ namespace BookReviewApp.Data
         public DbSet<Book> Books { get; set; }
         //cancel this method  
         //public DbSet<BookAuthor> BookAuthors { get; set; }
-        public DbSet<BookCategory> BookCategories { get; set; }
+        //public DbSet<BookCategory> BookCategories { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Reviewer> Reviewers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // mapping relation between category and book one to many & many to one  
-            modelBuilder.Entity<BookCategory>()
-                    .HasKey(pc => new { pc.BookId, pc.CategoryId });
-            modelBuilder.Entity<BookCategory>()
-                    .HasOne(p => p.Book)
-                    .WithMany(pc => pc.BookCategories)
-                    .HasForeignKey(p => p.BookId);
-            modelBuilder.Entity<BookCategory>()
-                    .HasOne(p => p.Category)
-                    .WithMany(pc => pc.BookCategories)
-                    .HasForeignKey(c => c.CategoryId);
+            //modelBuilder.Entity<BookCategory>()
+            //        .HasKey(pc => new { pc.BookId, pc.CategoryId });
+            //modelBuilder.Entity<BookCategory>()
+            //        .HasOne(p => p.Book)
+            //        .WithMany(pc => pc.BookCategories)
+            //        .HasForeignKey(p => p.BookId);
+            //modelBuilder.Entity<BookCategory>()
+            //        .HasOne(p => p.Category)
+            //        .WithMany(pc => pc.BookCategories)
+            //        .HasForeignKey(c => c.CategoryId);
 
             //modelBuilder.Entity<BookAuthor>()
             //        .HasKey(po => new { po.BookId, po.AuthorId });

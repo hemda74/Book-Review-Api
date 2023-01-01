@@ -6,13 +6,13 @@ namespace BookReviewApp.Interfaces
     public interface IReviewRepository
     {
         Task<IEnumerable<Review>> GetReviews();
-        Task<Review> GetReview(int reviewId);
-        ICollection<Review> GetReviewsOfABook(int bookId);
-        Task<IEnumerable<Review>> ReviewExists(int reviewId);
+        Task<Review?> GetReview(int reviewId);
+        Task<IEnumerable<Review>?> GetReviewsOfABook(int bookId);
+        Task<bool> ReviewExists(int reviewId);
         Task<Review> CreateReview(Review review);
         Task<Review> UpdateReview(Review review);
-        Task<Review> DeleteReview(int reviewId);
-        bool DeleteReviews(List<Review> reviews);
-        bool save();
+        Task DeleteReview(int reviewId);
+        
+        
     }
 }
